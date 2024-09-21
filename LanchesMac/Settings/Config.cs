@@ -10,7 +10,8 @@
         /// valor baixo para E. Por exemplo, 0.01 indicaria 
         /// uma probabilidade de erro de 1%.
         /// </summary>
-        public static double E = 0.01;
+        //public static double E = 0.01;
+        public static double E = 0.00;
 
         /// <summary>
         /// Probabilidade de perda de mensagem (F): Representa a chance de que uma 
@@ -22,12 +23,13 @@
         /// Por exemplo, 0.05 indicaria uma probabilidade de perda de mensagem de 5%.
         /// Esses valores podem variar dependendo das necessidades e das características da rede.
         /// </summary>
-        public static double F = 1; // Probabilidade de perda de mensagem
+        //public static double F = 1; // Probabilidade de perda de mensagem
+        public static double F = 0; // Probabilidade de perda de mensagem
 
         /// <summary>
         /// Número máximo de tentativas de envio do pedido antes de desistir.
         /// </summary>
-        public static int MaxTentativas = 1;
+        public static int MaxTentativas = 5;
 
         /// <summary>
         /// Intervalo de tempo (em milissegundos) entre as tentativas de retransmissão do pedido.

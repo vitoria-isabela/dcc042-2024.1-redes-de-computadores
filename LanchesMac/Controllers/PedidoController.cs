@@ -1,4 +1,9 @@
-﻿using LanchesMac.Models;
+﻿using System;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using LanchesMac.Models;
 using LanchesMac.Repositories.Interfaces;
 using LanchesMac.Services;
 using LanchesMac.Settings;
@@ -60,7 +65,7 @@ namespace LanchesMac.Controllers
             //verifica se existem itens de pedido
             if (_carrinhoCompra.CarrinhoCompraItems.Count == 0)
             {
-                ModelState.AddModelError("", "Seu carrinho esta vazio, que tal incluir um lanche...");
+                ModelState.AddModelError("", "Seu carrinho está vazio, que tal incluir um lanche...");
             }
 
             //calcula o total de itens e o total do pedido
@@ -100,13 +105,28 @@ namespace LanchesMac.Controllers
 
             while (!pedidoConfirmado && tentativas < Config.MaxTentativas)
             {
-                // Enviar o pedido e aguardar confirmação
-                pedidoConfirmado = await _pedidoService.ConfirmarPedidoAsync(pedido);
-
-                if (!pedidoConfirmado)
+                using (var client = new TcpClient())
                 {
-                    // Aguardar um tempo antes de retransmitir
-                    await Task.Delay(Config.IntervaloRetransmissao);
+                    await client.ConnectAsync("127.0.0.1", 8080); // IP do servidor e porta
+                    using (var networkStream = client.GetStream())
+                    {
+                        string pedidoJson = JsonSerializer.Serialize(pedido);
+                        byte[] pedidoBytes = Encoding.UTF8.GetBytes(pedidoJson);
+                        await networkStream.WriteAsync(pedidoBytes, 0, pedidoBytes.Length);
+
+                        byte[] buffer = new byte[1024];
+                        int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                        string confirmacao = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+                        if (confirmacao == "Pedido confirmado")
+                        {
+                            pedidoConfirmado = true;
+                        }
+                        else
+                        {
+                            await Task.Delay(Config.IntervaloRetransmissao);
+                        }
+                    }
                 }
 
                 tentativas++;
